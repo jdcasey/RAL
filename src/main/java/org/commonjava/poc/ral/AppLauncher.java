@@ -31,6 +31,10 @@ import org.apache.log4j.spi.LoggerRepository;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.mae.MAEException;
 import org.apache.maven.mae.app.AbstractMAEApplication;
+import org.apache.maven.mae.depgraph.DepGraphNode;
+import org.apache.maven.mae.depgraph.DependencyGraph;
+import org.apache.maven.mae.depgraph.impl.DependencyGraphResolver;
+import org.apache.maven.mae.depgraph.impl.FlexibleScopeDependencySelector;
 import org.apache.maven.mae.project.ProjectLoader;
 import org.apache.maven.mae.project.ProjectToolsException;
 import org.apache.maven.mae.project.session.ProjectToolsSession;
@@ -41,10 +45,6 @@ import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
-import org.commonjava.emb.depgraph.DepGraphNode;
-import org.commonjava.emb.depgraph.DependencyGraph;
-import org.commonjava.emb.depgraph.impl.DependencyGraphResolver;
-import org.commonjava.emb.depgraph.impl.FlexibleScopeDependencySelector;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -92,6 +92,8 @@ public class AppLauncher
     {
         AppLauncherSecurityManager secManager = new AppLauncherSecurityManager();
         System.setSecurityManager( secManager );
+
+        setupLogging( Level.INFO );
 
         try
         {
@@ -170,15 +172,16 @@ public class AppLauncher
 
     private final URLClassLoader classLoader;
 
-    private URL mainJar;
+    private final URL mainJar;
 
     private final Options options;
 
     public AppLauncher( final Options options )
         throws AppLauncherException
     {
-        this.options = options;
         setupLogging( Level.INFO );
+
+        this.options = options;
 
         try
         {
@@ -373,30 +376,27 @@ public class AppLauncher
         return "Remote Application Launcher";
     }
 
-    protected void setupLogging( final Level logLevel )
+    private static boolean loggingSet = false;
+
+    private static void setupLogging( final Level logLevel )
     {
+        if ( loggingSet )
+        {
+            return;
+        }
+
         final Configurator log4jConfigurator = new Configurator()
         {
             @Override
             public void doConfigure( final URL notUsed, final LoggerRepository repo )
             {
                 final ConsoleAppender cAppender = new ConsoleAppender( new SimpleLayout() );
-                // DON'T TOUCH THIS!
-                cAppender.setThreshold( Level.ALL );
+                cAppender.setThreshold( logLevel );
 
-                // DON'T TOUCH THIS!
-                repo.setThreshold( Level.ALL );
+                repo.setThreshold( logLevel );
                 repo.getRootLogger().removeAllAppenders();
                 repo.getRootLogger().setLevel( logLevel );
                 repo.getRootLogger().addAppender( cAppender );
-
-                // final Logger[] loggers =
-                // { repo.getLogger( PluginMonolithBundler.class.getName() ),
-                // repo.getLogger( PluginDescriptorManipulator.class.getName() ),
-                // repo.getLogger( FirstWinsFilter.class.getName() ),
-                // repo.getLogger( ComponentsXmlAggregator.class.getName() ),
-                // repo.getLogger( "org.commonjava.emb" ), repo.getLogger( "com.redhat.rcm.meadin.project" ),
-                // repo.getLogger( "com.redhat.rcm.meadin.maven" ), };
 
                 @SuppressWarnings( "unchecked" )
                 List<Logger> loggers = Collections.list( repo.getCurrentLoggers() );
@@ -409,8 +409,7 @@ public class AppLauncher
         };
 
         log4jConfigurator.doConfigure( null, LogManager.getLoggerRepository() );
-        //
-        // return logFile;
+        loggingSet = true;
     }
 
     private DependencyGraph resolveDependencies( final MavenProject project,

@@ -8,8 +8,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maeVersion>0.9.5-redhat</maeVersion>
-    <embVersion>0.5.9-redhat</embVersion>
+    <maeVersion>1.0-alpha-1-SNAPSHOT</maeVersion>
   </properties>
   
   <dependencyManagement>
@@ -33,9 +32,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.commonjava.emb.components</groupId>
-      <artifactId>emb-dependency-grapher</artifactId>
-      <version>${embVersion}</version>
+      <groupId>org.apache.maven.mae.components</groupId>
+      <artifactId>mae-dependency-grapher</artifactId>
+      <version>${maeVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.mae</groupId>
@@ -44,15 +43,17 @@
     <dependency>
       <groupId>org.apache.maven.mae.components</groupId>
       <artifactId>mae-project-tools</artifactId>
-      <version>${maeVersion}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <version>4.8.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>args4j</groupId>
-    	<artifactId>args4j</artifactId>
+      <groupId>args4j</groupId>
+      <artifactId>args4j</artifactId>
+      <version>2.0.12</version>
     </dependency>
   </dependencies>
   
